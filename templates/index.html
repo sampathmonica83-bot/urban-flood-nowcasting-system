@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        FloodWatch | Urban Flood Nowcasting
+    </title>
+
+
+    <!-- Leaflet CSS -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <!-- Chart.js -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
+
+
+    <!-- Leaflet JavaScript -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+
+    <style>
+
+        :root {
+
+            --navy: #0f172a;
+            --blue: #2563eb;
+            --light-blue: #eff6ff;
+            --background: #f1f5f9;
+            --white: #ffffff;
+            --text: #172033;
+            --muted: #64748b;
+
+            --green: #16a34a;
+            --orange: #f59e0b;
+            --red: #dc2626;
+
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: var(--background);
+
+            color: var(--text);
+
+        }
+
+
+        /* HEADER */
+
+        header {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0f172a,
+                    #1e3a8a
+                );
+
+            color: white;
+
+            padding: 25px 5%;
+
+        }
+
+
+        header h1 {
+
+            margin: 0 0 7px;
+
+            font-size: 30px;
+
+        }
+
+
+        header p {
+
+            margin: 0;
+
+            color: #dbeafe;
+
+        }
+
+
+        /* NAVIGATION */
+
+        nav {
+
+            background: white;
+
+            border-bottom:
+                1px solid #e2e8f0;
+
+            padding: 13px 5%;
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 1000;
+
+        }
+
+
+        nav a {
+
+            margin-right: 18px;
+
+            color: #1e3a8a;
+
+            text-decoration: none;
+
+            font-weight: bold;
+
+        }
+
+
+        /* MAIN */
+
+        .container {
+
+            width: 90%;
+
+            max-width: 1400px;
+
+            margin: 25px auto;
+
+        }
+
+
+        /* COMMON PANEL */
+
+        .panel,
+        .hero,
+        .card {
+
+            background: var(--white);
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 4px 18px
+                rgba(0, 0, 0, 0.06);
+
+        }
+
+
+        /* HERO */
+
+        .hero {
+
+            padding: 28px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .hero h2 {
+
+            margin: 0 0 8px;
+
+        }
+
+
+        .hero p {
+
+            color: var(--muted);
+
+            line-height: 1.6;
+
+        }
+
+
+        /* CONTROLS */
+
+        .controls {
+
+            display: grid;
+
+            grid-template-columns:
+                2fr 1fr;
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .control {
+
+            background: white;
+
+            padding: 18px;
+
+            border-radius: 16px;
+
+        }
+
+
+        .control label {
+
+            display: block;
+
+            font-weight: bold;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        select,
+        input,
+        textarea,
+        button {
+
+            font: inherit;
+
+        }
+
+
+        select,
+        input,
+        textarea {
+
+            width: 100%;
+
+            padding: 12px;
+
+            border:
+                1px solid #cbd5e1;
+
+            border-radius: 9px;
+
+        }
+
+
+        textarea {
+
+            min-height: 110px;
+
+            resize: vertical;
+
+        }
+
+
+        button {
+
+            border: 0;
+
+            border-radius: 9px;
+
+            padding: 12px 18px;
+
+            background: var(--blue);
+
+            color: white;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+
+            filter: brightness(0.95);
+
+        }
+
+
+        /* DASHBOARD CARDS */
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(5, 1fr);
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .card {
+
+            padding: 20px;
+
+        }
+
+
+        .card h3 {
+
+            margin:
+                0 0 10px;
+
+            color: var(--muted);
+
+            font-size: 14px;
+
+        }
+
+
+        .value {
+
+            font-size: 27px;
+
+            font-weight: 800;
+
+        }
+
+
+        .small {
+
+            color: var(--muted);
+
+            font-size: 13px;
+
+            margin-top: 6px;
+
+        }
+
+
+        .status-low {
+
+            color: var(--green);
+
+            font-weight: bold;
+
+        }
+
+
+        .status-medium {
+
+            color: var(--orange);
+
+            font-weight: bold;
+
+        }
+
+
+        .status-high {
+
+            color: var(--red);
+
+            font-weight: bold;
+
+        }
+
+
+        /* RISK */
+
+        .risk {
+
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .risk-top {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items: center;
+
+        }
+
+
+        .risk-top h2 {
+
+            margin: 0;
+
+        }
+
+
+        .risk-number {
+
+            font-size: 30px;
+
+            font-weight: 800;
+
+        }
+
+
+        .bar {
+
+            height: 22px;
+
+            background: #e2e8f0;
+
+            border-radius: 99px;
+
+            overflow: hidden;
+
+            margin-top: 15px;
+
+        }
+
+
+        .bar > div {
+
+            height: 100%;
+
+            width: 0;
+
+            border-radius: 99px;
+
+            transition:
+                width 0.4s;
+
+        }
+
+
+        /* ALERT */
+
+        .alert {
+
+            padding: 18px;
+
+            border-radius: 12px;
+
+            margin-bottom: 20px;
+
+            font-weight: bold;
+
+        }
+
+
+        .alert-low {
+
+            background: #dcfce7;
+
+            color: #166534;
+
+        }
+
+
+        .alert-medium {
+
+            background: #fef3c7;
+
+            color: #92400e;
+
+        }
+
+
+        .alert-high {
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+        }
+
+
+        /* MAP */
+
+        .map-panel {
+
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        #map {
+
+            height: 540px;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+        }
+
+
+        .legend {
+
+            display: flex;
+
+            gap: 18px;
+
+            flex-wrap: wrap;
+
+            margin-top: 12px;
+
+            color: var(--muted);
+
+            font-size: 13px;
+
+        }
+
+
+        .dot {
+
+            display: inline-block;
+
+            width: 11px;
+
+            height: 11px;
+
+            border-radius: 50%;
+
+            margin-right: 5px;
+
+        }
+
+
+        /* GRID */
+
+        .grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1.4fr 1fr;
+
+            gap: 20px;
+
+        }
+
+
+        /* CHART */
+
+        .chart-panel {
+
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .chart-wrap {
+
+            height: 350px;
+
+        }
+
+
+        /* COMPLAINTS */
+
+        .complaint-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 20px;
+
+        }
+
+
+        .complaint-panel {
+
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .form-row {
+
+            margin-bottom: 12px;
+
+        }
+
+
+        .form-row label {
+
+            display: block;
+
+            font-weight: bold;
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .message {
+
+            margin-top: 12px;
+
+            padding: 10px;
+
+            border-radius: 8px;
+
+            display: none;
+
+        }
+
+
+        .success {
+
+            background: #dcfce7;
+
+            color: #166534;
+
+        }
+
+
+        .error {
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+        }
+
+
+        /* TABLE */
+
+        .table-wrap {
+
+            overflow-x: auto;
+
+        }
+
+
+        .complaints {
+
+            width: 100%;
+
+            border-collapse:
+                collapse;
+
+        }
+
+
+        .complaints th,
+        .complaints td {
+
+            padding: 10px;
+
+            border-bottom:
+                1px solid #e2e8f0;
+
+            text-align: left;
+
+            font-size: 14px;
+
+            vertical-align: top;
+
+        }
+
+
+        .badge {
+
+            padding:
+                4px 8px;
+
+            border-radius:
+                999px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+        }
+
+
+        .badge-low {
+
+            background: #dcfce7;
+
+            color: #166534;
+
+        }
+
+
+        .badge-medium {
+
+            background: #fef3c7;
+
+            color: #92400e;
+
+        }
+
+
+        .badge-high {
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+        }
+
+
+        .badge-critical {
+
+            background: #fecaca;
+
+            color: #7f1d1d;
+
+        }
+
+
+        /* INFO */
+
+        .info {
+
+            line-height: 1.7;
+
+            color: #475569;
+
+        }
+
+
+        .safe {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+
+        }
+
+
+        .safe div {
+
+            background: #f8fafc;
+
+            border:
+                1px solid #e2e8f0;
+
+            border-radius: 12px;
+
+            padding: 15px;
+
+        }
+
+
+        /* FOOTER */
+
+        footer {
+
+            background:
+                var(--navy);
+
+            color: #cbd5e1;
+
+            text-align: center;
+
+            padding: 25px;
+
+            margin-top: 30px;
+
+        }
+
+
+        /* MOBILE */
+
+        @media (max-width: 1000px) {
+
+            .cards {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+
+            .grid,
+            .complaint-grid,
+            .controls {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .safe {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .container {
+
+                width: 94%;
+
+            }
+
+
+            .cards {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            header h1 {
+
+                font-size: 23px;
+
+            }
+
+
+            #map {
+
+                height: 420px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header>
+
+    <h1>
+        🌧️ FloodWatch
+    </h1>
+
+    <p>
+        Urban Flood Nowcasting,
+        Public Reporting & Early Warning Dashboard
+    </p>
+
+</header>
+
+
+<!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+<nav>
+
+    <a href="#dashboard">
+        Dashboard
+    </a>
+
+    <a href="#map-section">
+        Risk Map
+    </a>
+
+    <a href="#report">
+        Report Flooding
+    </a>
+
+    <a href="#alerts">
+        Alerts
+    </a>
+
+    <a href="#safety">
+        Safety
+    </a>
+
+</nav>
+
+
+<main class="container">
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="hero">
+
+    <h2>
+        Help detect flooding before it becomes a disaster
+    </h2>
+
+    <p>
+        This system combines rainfall,
+        water-level and drainage indicators
+        with public reports to demonstrate
+        how citizens and authorities could
+        share flood information through
+        one platform.
+    </p>
+
+</section>
+
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+
+<section id="dashboard">
+
+
+    <div class="controls">
+
+
+        <div class="control">
+
+            <label for="locationSelect">
+
+                Monitoring Location
+
+            </label>
+
+
+            <select id="locationSelect">
+
+            </select>
+
+        </div>
+
+
+        <div class="control">
+
+            <label>
+                System Mode
+            </label>
+
+
+            <div
+                style="
+                font-weight:bold;
+                padding:12px 0;
+                "
+            >
+
+                🟢 Prototype Monitoring
+
+            </div>
+
+
+            <div class="small">
+
+                Demonstration data.
+                Not an official emergency warning.
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- DASHBOARD CARDS -->
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <h3>
+                📍 LOCATION
+            </h3>
+
+            <div
+                class="value"
+                id="locationValue"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🌧️ RAINFALL
+            </h3>
+
+            <div class="value">
+
+                <span id="rainfallValue">
+                    —
+                </span>
+
+                mm
+
+            </div>
+
+            <div
+                class="small"
+                id="rainfallStatus"
+            >
+                —
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                💧 WATER LEVEL
+            </h3>
+
+            <div class="value">
+
+                <span id="waterValue">
+                    —
+                </span>
+
+                m
+
+            </div>
+
+            <div class="small">
+                Monitoring indicator
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                🚰 DRAINAGE
+            </h3>
+
+            <div class="value">
+
+                <span id="drainageValue">
+                    —
+                </span>
+
+                %
+
+            </div>
+
+            <div class="small">
+                Prototype capacity indicator
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                ⚠️ FLOOD RISK
+            </h3>
+
+            <div class="value">
+
+                <span id="riskValue">
+                    —
+                </span>
+
+                %
+
+            </div>
+
+            <div
+                class="small"
+                id="riskStatus"
+            >
+                —
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- RISK BAR -->
+
+    <div class="panel risk">
+
+
+        <div class="risk-top">
+
+            <h2>
+                Flood Risk Level
+            </h2>
+
+
+            <div class="risk-number">
+
+                <span id="riskNumber">
+                    —
+                </span>
+
+                %
+
+            </div>
+
+        </div>
+
+
+        <div class="bar">
+
+            <div id="riskBar"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ALERT -->
+
+    <div
+        id="alerts"
+        class="alert alert-medium"
+    >
+
+        ⚠️
+
+        <span id="alertText">
+
+            Select a location to view
+            its prototype risk.
+
+        </span>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     MAP
+===================================================== -->
+
+<section
+    id="map-section"
+    class="panel map-panel"
+>
+
+    <h2>
+        🌍 Global Flood Risk Map
+    </h2>
+
+
+    <p class="small">
+
+        Green = low,
+        orange = medium,
+        red = high.
+
+        Click a marker to inspect a location.
+
+    </p>
+
+
+    <div id="map"></div>
+
+
+    <div class="legend">
+
+        <span>
+
+            <i
+                class="dot"
+                style="background:#16a34a"
+            ></i>
+
+            Low
+
+        </span>
+
+
+        <span>
+
+            <i
+                class="dot"
+                style="background:#f59e0b"
+            ></i>
+
+            Medium
+
+        </span>
+
+
+        <span>
+
+            <i
+                class="dot"
+                style="background:#dc2626"
+            ></i>
+
+            High
+
+        </span>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CHART + AUTHORITY VIEW
+===================================================== -->
+
+<section class="grid">
+
+
+    <div class="panel chart-panel">
+
+        <h2>
+            📊 Rainfall & Water-Level Trend
+        </h2>
+
+
+        <div class="chart-wrap">
+
+            <canvas
+                id="floodChart"
+            ></canvas>
+
+        </div>
+
+    </div>
+
+
+    <div class="panel chart-panel">
+
+        <h2>
+            🏛️ Authority Action View
+        </h2>
+
+
+        <div class="info">
+
+            <p>
+                <strong>
+                    Suggested workflow:
+                </strong>
+            </p>
+
+
+            <ol>
+
+                <li>
+                    Monitor rainfall and
+                    water-level feeds.
+                </li>
+
+                <li>
+                    Check high-risk
+                    locations on the map.
+                </li>
+
+                <li>
+                    Review citizen
+                    complaints.
+                </li>
+
+                <li>
+                    Verify reports with
+                    field teams or sensors.
+                </li>
+
+                <li>
+                    Issue official warnings
+                    through authorized channels.
+                </li>
+
+            </ol>
+
+
+            <p>
+
+                <strong>
+                    Important:
+                </strong>
+
+                This academic prototype
+                does not automatically
+                issue government orders
+                or emergency alerts.
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     COMPLAINT REPORTING
+===================================================== -->
+
+<section
+    id="report"
+    class="panel complaint-panel"
+>
+
+    <h2>
+        📢 Report Flooding or
+        Drainage Problems
+    </h2>
+
+
+    <p class="small">
+
+        Submit a local problem so it
+        appears in the authority
+        complaint queue.
+
+    </p>
+
+
+    <div class="complaint-grid">
+
+
+        <!-- FORM -->
+
+        <form id="complaintForm">
+
+
+            <div class="form-row">
+
+                <label for="complaintLocation">
+
+                    Location
+
+                </label>
+
+
+                <select
+                    id="complaintLocation"
+                    required
+                ></select>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="issue">
+
+                    Problem
+
+                </label>
+
+
+                <select
+                    id="issue"
+                    required
+                >
+
+                    <option value="Waterlogging">
+                        Waterlogging
+                    </option>
+
+                    <option value="Drain blockage">
+                        Drain blockage
+                    </option>
+
+                    <option value="Overflowing drain">
+                        Overflowing drain
+                    </option>
+
+                    <option value="Road flooding">
+                        Road flooding
+                    </option>
+
+                    <option value="Rising water level">
+                        Rising water level
+                    </option>
+
+                    <option value="Other">
+                        Other
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="severity">
+
+                    Severity
+
+                </label>
+
+
+                <select id="severity">
+
+                    <option>
+                        Low
+                    </option>
+
+                    <option selected>
+                        Medium
+                    </option>
+
+                    <option>
+                        High
+                    </option>
+
+                    <option>
+                        Critical
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="reporter">
+
+                    Reporter Name
+                    (Optional)
+
+                </label>
+
+
+                <input
+                    id="reporter"
+                    maxlength="80"
+                    placeholder="Optional"
+                >
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="description">
+
+                    Description
+
+                </label>
+
+
+                <textarea
+                    id="description"
+                    maxlength="1000"
+                    required
+                    placeholder="Describe what is happening..."
+                ></textarea>
+
+            </div>
+
+
+            <button type="submit">
+
+                Submit Flood Report
+
+            </button>
+
+
+            <div
+                id="formMessage"
+                class="message"
+            ></div>
+
+
+        </form>
+
+
+        <!-- REPORT GUIDANCE -->
+
+        <div>
+
+            <h3>
+                What makes a report useful?
+            </h3>
+
+
+            <div class="safe">
+
+
+                <div>
+
+                    📍
+
+                    <strong>
+                        Location
+                    </strong>
+
+                    <br>
+
+                    <span class="small">
+
+                        Select the nearest
+                        monitoring location.
+
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    ⚠️
+
+                    <strong>
+                        Severity
+                    </strong>
+
+                    <br>
+
+                    <span class="small">
+
+                        Explain how dangerous
+                        the situation appears.
+
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    📝
+
+                    <strong>
+                        Clear Details
+                    </strong>
+
+                    <br>
+
+                    <span class="small">
+
+                        Mention roads,
+                        drains, water depth
+                        or access problems.
+
+                    </span>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     COMPLAINT QUEUE
+===================================================== -->
+
+<section class="panel complaint-panel">
+
+
+    <h2>
+        🗂️ Recent Community Reports
+    </h2>
+
+
+    <div class="table-wrap">
+
+
+        <table class="complaints">
+
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        ID
+                    </th>
+
+                    <th>
+                        Location
+                    </th>
+
+                    <th>
+                        Problem
+                    </th>
+
+                    <th>
+                        Severity
+                    </th>
+
+                    <th>
+                        Report
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="complaintTable">
+
+                <tr>
+
+                    <td colspan="6">
+
+                        Loading reports...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+
+        </table>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     SAFETY
+===================================================== -->
+
+<section
+    id="safety"
+    class="panel complaint-panel"
+>
+
+
+    <h2>
+        🛟 Flood Safety
+    </h2>
+
+
+    <div class="info">
+
+
+        <ul>
+
+            <li>
+                Do not walk or drive
+                through moving or
+                unknown-depth floodwater.
+            </li>
+
+            <li>
+                Stay away from open
+                drains, manholes and
+                electrical equipment.
+            </li>
+
+            <li>
+                Move to higher ground
+                if local authorities
+                issue an evacuation warning.
+            </li>
+
+            <li>
+                Keep essential medicines,
+                water, documents and
+                a charged phone ready.
+            </li>
+
+            <li>
+                For an immediate emergency,
+                contact your local
+                emergency services.
+            </li>
+
+        </ul>
+
+
+    </div>
+
+
+</section>
+
+
+</main>
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+    Urban Flood Nowcasting System
+
+    <br>
+
+    Disaster Management
+    Academic Prototype
+
+</footer>
+
+
+<script>
+
+
+/* =====================================================
+   GLOBAL VARIABLES
+===================================================== */
+
+let locations = [];
+
+let map;
+
+let markers = {};
+
+let chart;
+
+
+/* =====================================================
+   RISK CLASS
+===================================================== */
+
+function riskClass(status) {
+
+    if (status === "LOW") {
+
+        return "status-low";
+
+    }
+
+    if (status === "MEDIUM") {
+
+        return "status-medium";
+
+    }
+
+    return "status-high";
+
+}
+
+
+/* =====================================================
+   MARKER COLOR
+===================================================== */
+
+function markerColor(status) {
+
+    if (status === "LOW") {
+
+        return "#16a34a";
+
+    }
+
+    if (status === "MEDIUM") {
+
+        return "#f59e0b";
+
+    }
+
+    return "#dc2626";
+
+}
+
+
+/* =====================================================
+   INITIALIZE MAP
+===================================================== */
+
+function initMap() {
+
+    map = L.map("map").setView(
+        [20, 20],
+        2
+    );
+
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "&copy; OpenStreetMap contributors",
+
+            maxZoom: 19
+        }
+    ).addTo(map);
+
+}
+
+
+/* =====================================================
+   INITIALIZE CHART
+===================================================== */
+
+function initChart() {
+
+    const canvas =
+        document.getElementById(
+            "floodChart"
+        );
+
+
+    chart = new Chart(
+        canvas,
+        {
+
+            type: "line",
+
+            data: {
+
+                labels: [
+                    "6 AM",
+                    "9 AM",
+                    "12 PM",
+                    "3 PM",
+                    "6 PM",
+                    "9 PM"
+                ],
+
+                datasets: [
+
+                    {
+
+                        label:
+                            "Rainfall (mm)",
+
+                        data: [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+
+                        borderWidth: 3,
+
+                        tension: 0.3
+
+                    },
+
+
+                    {
+
+                        label:
+                            "Water Level (m)",
+
+                        data: [
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+
+                        borderWidth: 3,
+
+                        tension: 0.3
+
+                    }
+
+                ]
+
+            },
+
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   UPDATE DASHBOARD
+===================================================== */
+
+function updateDashboard(name) {
+
+    const data =
+        locations.find(
+            location =>
+                location.name === name
+        );
+
+
+    if (!data) {
+
+        return;
+
+    }
+
+
+    /* Location */
+
+    document.getElementById(
+        "locationValue"
+    ).textContent =
+        `${data.name}, ${data.country}`;
+
+
+    /* Rainfall */
+
+    document.getElementById(
+        "rainfallValue"
+    ).textContent =
+        data.rainfall;
+
+
+    /* Water */
+
+    document.getElementById(
+        "waterValue"
+    ).textContent =
+        data.water;
+
+
+    /* Drainage */
+
+    document.getElementById(
+        "drainageValue"
+    ).textContent =
+        data.drainage;
+
+
+    /* Risk */
+
+    document.getElementById(
+        "riskValue"
+    ).textContent =
+        data.risk;
+
+
+    document.getElementById(
+        "riskNumber"
+    ).textContent =
+        data.risk;
+
+
+    /* Rainfall status */
+
+    const rainfallStatus =
+        data.rainfall < 35
+            ? "Low"
+            : data.rainfall < 70
+                ? "Moderate"
+                : "Heavy";
+
+
+    document.getElementById(
+        "rainfallStatus"
+    ).textContent =
+        rainfallStatus;
+
+
+    /* Risk status */
+
+    const riskStatus =
+        document.getElementById(
+            "riskStatus"
+        );
+
+
+    riskStatus.textContent =
+        data.status;
+
+
+    riskStatus.className =
+        "small " +
+        riskClass(data.status);
+
+
+    /* Risk bar */
+
+    const riskBar =
+        document.getElementById(
+            "riskBar"
+        );
+
+
+    riskBar.style.width =
+        data.risk + "%";
+
+
+    riskBar.style.background =
+        markerColor(data.status);
+
+
+    /* Alert */
+
+    const alert =
+        document.getElementById(
+            "alerts"
+        );
+
+
+    alert.className =
+        "alert " +
+        (
+            data.status === "LOW"
+                ? "alert-low"
+                : data.status === "MEDIUM"
+                    ? "alert-medium"
+                    : "alert-high"
+        );
+
+
+    const alertText =
+        document.getElementById(
+            "alertText"
+        );
+
+
+    if (data.status === "LOW") {
+
+        alertText.textContent =
+            "Low prototype risk. Continue normal monitoring.";
+
+    }
+
+    else if (
+        data.status === "MEDIUM"
+    ) {
+
+        alertText.textContent =
+            "Moderate prototype risk. Monitor rainfall, water levels and community reports.";
+
+    }
+
+    else {
+
+        alertText.textContent =
+            "High prototype risk. Authorities should verify conditions and follow official emergency procedures.";
+
+    }
+
+
+    /* Update chart */
+
+    chart.data.datasets[0].data = [
+
+        Math.round(
+            data.rainfall * 0.25
+        ),
+
+        Math.round(
+            data.rainfall * 0.40
+        ),
+
+        Math.round(
+            data.rainfall * 0.60
+        ),
+
+        Math.round(
+            data.rainfall * 0.75
+        ),
+
+        data.rainfall,
+
+        Math.round(
+            data.rainfall * 0.90
+        )
+
+    ];
+
+
+    chart.data.datasets[1].data = [
+
+        Number(
+            (data.water * 0.45)
+            .toFixed(1)
+        ),
+
+        Number(
+            (data.water * 0.55)
+            .toFixed(1)
+        ),
+
+        Number(
+            (data.water * 0.70)
+            .toFixed(1)
+        ),
+
+        Number(
+            (data.water * 0.82)
+            .toFixed(1)
+        ),
+
+        data.water,
+
+        Number(
+            (data.water * 0.92)
+            .toFixed(1)
+        )
+
+    ];
+
+
+    chart.update();
+
+
+    /* Move map */
+
+    map.setView(
+        [data.lat, data.lon],
+        5
+    );
+
+
+    /* Open marker */
+
+    if (markers[data.name]) {
+
+        markers[data.name]
+            .openPopup();
+
+    }
+
+}
+
+
+/* =====================================================
+   CREATE MAP MARKERS
+===================================================== */
+
+function buildMarkers() {
+
+    locations.forEach(
+        data => {
+
+            const color =
+                markerColor(
+                    data.status
+                );
+
+
+            const marker =
+                L.circleMarker(
+                    [
+                        data.lat,
+                        data.lon
+                    ],
+                    {
+
+                        radius: 9,
+
+                        color: color,
+
+                        fillColor: color,
+
+                        fillOpacity: 0.8,
+
+                        weight: 2
+
+                    }
+                )
+                .addTo(map);
+
+
+            marker.bindPopup(
+
+                `<strong>
+                    ${data.name},
+                    ${data.country}
+                </strong>
+                <br><br>
+
+                Rainfall:
+                ${data.rainfall} mm
+
+                <br>
+
+                Water level:
+                ${data.water} m
+
+                <br>
+
+                Drainage:
+                ${data.drainage}%
+
+                <br>
+
+                Flood risk:
+                ${data.risk}%
+
+                (${data.status})`
+
+            );
+
+
+            marker.on(
+                "click",
+                () => {
+
+                    document
+                        .getElementById(
+                            "locationSelect"
+                        )
+                        .value =
+                        data.name;
+
+
+                    updateDashboard(
+                        data.name
+                    );
+
+                }
+            );
+
+
+            markers[data.name] =
+                marker;
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   LOCATION DROPDOWNS
+===================================================== */
+
+function fillLocationLists() {
+
+    const mainSelect =
+        document.getElementById(
+            "locationSelect"
+        );
+
+
+    const complaintSelect =
+        document.getElementById(
+            "complaintLocation"
+        );
+
+
+    mainSelect.innerHTML = "";
+
+    complaintSelect.innerHTML = "";
+
+
+    locations.forEach(
+        data => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                data.name;
+
+
+            option.textContent =
+                `${data.name}, ${data.country}`;
+
+
+            mainSelect.appendChild(
+                option
+            );
+
+
+            complaintSelect.appendChild(
+                option.cloneNode(true)
+            );
+
+        }
+    );
+
+
+    mainSelect.value =
+        "Chennai";
+
+
+    complaintSelect.value =
+        "Chennai";
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(
+            /[&<>"']/g,
+            character => ({
+
+                "&": "&amp;",
+
+                "<": "&lt;",
+
+                ">": "&gt;",
+
+                '"': "&quot;",
+
+                "'": "&#039;"
+
+            })[character]
+        );
+
+}
+
+
+/* =====================================================
+   LOAD COMPLAINTS
+===================================================== */
+
+async function loadComplaints() {
+
+    const response =
+        await fetch(
+            "/api/complaints"
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "Could not load complaints."
+        );
+
+    }
+
+
+    const rows =
+        await response.json();
+
+
+    const table =
+        document.getElementById(
+            "complaintTable"
+        );
+
+
+    if (!rows.length) {
+
+        table.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    No community reports yet.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+        rows.map(
+            report => {
+
+                const severity =
+                    String(
+                        report.severity
+                    ).toLowerCase();
+
+
+                return `
+
+                    <tr>
+
+                        <td>
+                            #${report.id}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                report.location
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                report.issue
+                            )}
+                        </td>
+
+                        <td>
+
+                            <span
+                                class="badge
+                                badge-${severity}"
+                            >
+
+                                ${escapeHtml(
+                                    report.severity
+                                )}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            ${escapeHtml(
+                                report.description
+                            )}
+
+                        </td>
+
+                        <td>
+
+                            ${escapeHtml(
+                                report.status
+                            )}
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        )
+        .join("");
+
+}
+
+
+/* =====================================================
+   COMPLAINT FORM
+===================================================== */
+
+document
+    .getElementById(
+        "complaintForm"
+    )
+    .addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            const message =
+                document.getElementById(
+                    "formMessage"
+                );
+
+
+            message.style.display =
+                "none";
+
+
+            const payload = {
+
+                location:
+                    document
+                        .getElementById(
+                            "complaintLocation"
+                        )
+                        .value,
+
+                issue:
+                    document
+                        .getElementById(
+                            "issue"
+                        )
+                        .value,
+
+                severity:
+                    document
+                        .getElementById(
+                            "severity"
+                        )
+                        .value,
+
+                reporter:
+                    document
+                        .getElementById(
+                            "reporter"
+                        )
+                        .value
+                        .trim(),
+
+                description:
+                    document
+                        .getElementById(
+                            "description"
+                        )
+                        .value
+                        .trim()
+
+            };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/complaints",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    payload
+                                )
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.error ||
+                        "Could not submit report."
+                    );
+
+                }
+
+
+                message.textContent =
+                    `Report #${data.complaint_id} received successfully.`;
+
+
+                message.className =
+                    "message success";
+
+
+                message.style.display =
+                    "block";
+
+
+                event.target.reset();
+
+
+                document
+                    .getElementById(
+                        "complaintLocation"
+                    )
+                    .value =
+                    document
+                        .getElementById(
+                            "locationSelect"
+                        )
+                        .value;
+
+
+                await loadComplaints();
+
+            }
+
+
+            catch (error) {
+
+                message.textContent =
+                    error.message;
+
+
+                message.className =
+                    "message error";
+
+
+                message.style.display =
+                    "block";
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   LOCATION CHANGE
+===================================================== */
+
+document
+    .getElementById(
+        "locationSelect"
+    )
+    .addEventListener(
+        "change",
+        event => {
+
+            updateDashboard(
+                event.target.value
+            );
+
+        }
+    );
+
+
+/* =====================================================
+   START APPLICATION
+===================================================== */
+
+async function startApplication() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/locations"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Location data could not be loaded."
+            );
+
+        }
+
+
+        locations =
+            await response.json();
+
+
+        fillLocationLists();
+
+
+        initMap();
+
+
+        initChart();
+
+
+        buildMarkers();
+
+
+        updateDashboard(
+            "Chennai"
+        );
+
+
+        await loadComplaints();
+
+    }
+
+
+    catch (error) {
+
+        console.error(error);
+
+
+        const alert =
+            document.getElementById(
+                "alerts"
+            );
+
+
+        alert.className =
+            "alert alert-high";
+
+
+        document.getElementById(
+            "alertText"
+        ).textContent =
+            error.message;
+
+    }
+
+}
+
+
+startApplication();
+
+
+</script>
+
+
+</body>
+
+</html>
